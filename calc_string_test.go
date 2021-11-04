@@ -43,7 +43,7 @@ func TestCalcString3Numbers(t *testing.T) {
 
 func TestCalcStringNegative(t *testing.T) {
 	result, err := CalcString("-1")
-	if result != nil || err != "Exception" {
+	if result != 0 || err == nil {
 		t.Errorf("expected nil result and error from negative number string but got: %q, %q", result, err)
 	}
 }
