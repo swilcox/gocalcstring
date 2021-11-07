@@ -1,73 +1,35 @@
 package main
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
-func TestCalcStringEmpty(t *testing.T) {
-	result, err := CalcString("")
-	if result != 0 || err != nil {
-		t.Errorf("expected 0 result and nil error from empty string but got: %q, %q", result, err)
+func TestCalcString(t *testing.T) {
+	testCases := []struct {
+		InputString   string
+		ExpectedValue int
+		ExpectedError error
+		Description   string
+	}{
+		{"", 0, nil, "Empty String"},
+		{"42", 42, nil, "Single Value"},
+		{"1,2", 3, nil, "Comma-separated"},
+		{"42\n1", 43, nil, "Newline-separated"},
+		{"20\n21,23", 64, nil, "multiple separators"},
+		{"-1,-2", 0, errors.New("negatives not allowed [-1, -2]"), "negatives should throw error"},
+		{"1001,1", 1, nil, "ignore values greater than 1000"},
+		{"//;\n1;2", 3, nil, "Custom separator"},
+		{"//;*\n1;2*3", 6, nil, "Multiple custom separators"},
+		{"//[***]\n1***2***3", 6, nil, "Custom Length separator"},
+		{"//[**][--]\n1**2--3", 6, nil, "Multiple Custom length separators"},
 	}
-}
-
-func TestCalcStringNumber(t *testing.T) {
-	result, err := CalcString("42")
-	if result != 42 || err != nil {
-		t.Errorf("expected 42 result and nil error from single number string but got: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringCommas(t *testing.T) {
-	result, err := CalcString("42,1")
-	if result != 43 || err != nil {
-		t.Errorf("expected 43 result and nil error from comma delimited string but got: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringNewLine(t *testing.T) {
-	result, err := CalcString("42\n1")
-	if result != 43 || err != nil {
-		t.Errorf("expected 43 result and nil error from newline delimited string but got: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringMixedDelimiters(t *testing.T) {
-	result, err := CalcString("20\n21,23")
-	if result != 64 || err != nil {
-		t.Errorf("expected 64 result and nil error from 3 number mixed delimiter string but got: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringNegative(t *testing.T) {
-	result, err := CalcString("-1")
-	if result != 0 || err == nil {
-		t.Errorf("expected nil result and error from negative number string but got: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringIgnoreGreater1000(t *testing.T) {
-	result, err := CalcString("42\n1001")
-	if result != 42 || err != nil {
-		t.Errorf("expected 42 result and nil error from string with greater than 1000 in it but got: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringCustomDelimiter(t *testing.T) {
-	result, err := CalcString("//;\n1;2")
-	if result != 3 || err != nil {
-		t.Errorf("expected 3 result and nil error from string with custom ; delimiter: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringCustomLengthDelimiter(t *testing.T) {
-	result, err := CalcString("//[***]\n1***2***3")
-	if result != 6 || err != nil {
-		t.Errorf("expected 6 result and nil error from string with custom *** delimiter: %q, %q", result, err)
-	}
-}
-
-func TestCalcStringCustomLengthMultipleDelimiters(t *testing.T) {
-	result, err := CalcString("//[*][%]\n1*2%3")
-	if result != 6 || err != nil {
-		t.Errorf("expected 6 result and nil error from string with custom delimiters: %q, %q", result, err)
+	for _, tCase := range testCases {
+		t.Run(tCase.Description, func(t *testing.T) {
+			result, err := CalcString(tCase.InputString)
+			if result != tCase.ExpectedValue || (tCase.ExpectedError == nil && err != nil) || (tCase.ExpectedError != nil && (err == nil || err.Error() != tCase.ExpectedError.Error())) {
+				t.Errorf("SUB-TEST: %q\nexpected result: %v and error: %q but received result: %v and error: %q", tCase.Description, tCase.ExpectedValue, tCase.ExpectedError, result, err)
+			}
+		})
 	}
 }
